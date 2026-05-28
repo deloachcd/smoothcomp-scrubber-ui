@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smoothcomp Scrubber</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <h1>Smoothcomp Scrubber</h1>
+  </header>
+
+  <main>
+
+    <!-- ------------------------------------------------------------------ -->
+    <!-- STEP 1: Competitor Lists                                            -->
+    <!-- ------------------------------------------------------------------ -->
+    <section id="section-lists">
+      <h2>1. Competitor Lists</h2>
+
+      <div class="row">
+        <div class="card" id="saved-lists-card">
+          <h3>Saved Lists</h3>
+          <ul id="lists-ul"></ul>
+          <p class="empty-msg" id="lists-empty">No saved lists yet.</p>
+        </div>
+
+        <div class="card">
+          <h3>Create / Edit List</h3>
+          <label for="list-name-input">List name</label>
+          <input type="text" id="list-name-input" placeholder="e.g. My Team">
+          <label for="competitors-textarea">Competitors (one per line)</label>
+          <textarea id="competitors-textarea" rows="8" placeholder="Nate Thompson&#10;Jane Doe"></textarea>
+          <div class="btn-row">
+            <button id="save-list-btn" class="btn-primary">Save List</button>
+            <button id="clear-form-btn" class="btn-secondary">Clear</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------------------------ -->
+    <!-- STEP 2: Scan                                                        -->
+    <!-- ------------------------------------------------------------------ -->
+    <section id="section-scan">
+      <h2>2. Scan Videos</h2>
+      <div class="card">
+        <div class="row row-gap">
+
+          <div class="col">
+            <label for="scan-list-select">Competitor list</label>
+            <select id="scan-list-select">
+              <option value="">-- select a list --</option>
+            </select>
+
+            <label for="results-file-input">Output filename</label>
+            <input type="text" id="results-file-input" value="results.csv">
+
+            <label for="interval-input">Interval (seconds)</label>
+            <input type="number" id="interval-input" value="5" min="1" max="60" step="1">
+
+            <label for="gap-input">Gap tolerance (intervals)</label>
+            <input type="number" id="gap-input" value="3" min="1" max="20" step="1">
+          </div>
+
+          <div class="col col-wide">
+            <label>Video files <span class="hint">(select one or more)</span></label>
+            <input type="text" id="video-filter" placeholder="Filter by name...">
+            <div id="video-list" class="file-list"></div>
+            <div id="video-empty" class="empty-msg">No video files found in /videos.</div>
+          </div>
+
+        </div>
+
+        <div class="btn-row">
+          <button id="start-scan-btn" class="btn-primary">Start Scan</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------------------------ -->
+    <!-- STEP 3: Clips                                                       -->
+    <!-- ------------------------------------------------------------------ -->
+    <section id="section-clips">
+      <h2>3. Make Clips</h2>
+      <div class="card">
+        <div class="row row-gap">
+          <div class="col">
+            <label for="clips-results-select">Results file</label>
+            <select id="clips-results-select">
+              <option value="">-- select results --</option>
+            </select>
+
+            <label for="padding-input">Padding (seconds)</label>
+            <input type="number" id="padding-input" value="10" min="0" max="120" step="1">
+
+            <label for="clips-dir-input">Output folder</label>
+            <input type="text" id="clips-dir-input" value="clips">
+          </div>
+        </div>
+        <div class="btn-row">
+          <button id="start-clips-btn" class="btn-primary">Make Clips</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------------------------ -->
+    <!-- Log                                                                 -->
+    <!-- ------------------------------------------------------------------ -->
+    <section id="section-log">
+      <h2>Log <span id="job-status-badge" class="badge"></span></h2>
+      <div id="log-box"></div>
+    </section>
+
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
