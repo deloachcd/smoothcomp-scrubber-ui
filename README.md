@@ -2,16 +2,6 @@
 
 A web UI for [smoothcomp-scrubber](https://github.com/deloachcd/smoothcomp-scrubber). Browse your video files, manage saved competitor lists, run scans, watch progress live, and cut clips — all from the browser.
 
-## Prerequisites
-
-This image builds on top of the `local/scrubber` base image. Build that first:
-
-```sh
-git clone https://github.com/deloachcd/smoothcomp-scrubber.git
-cd smoothcomp-scrubber
-docker build -t local/scrubber .
-```
-
 ## Build
 
 ```sh
@@ -19,6 +9,8 @@ git clone https://github.com/Felttrip/smoothcomp-scrubber-ui.git
 cd smoothcomp-scrubber-ui
 docker build -t local/scrubber-ui .
 ```
+
+The image is self-contained — it builds FFmpeg, OpenCV, and Tesseract from scratch and fetches the scrubber scripts directly from GitHub. No other images need to be built first.
 
 ## Run
 
