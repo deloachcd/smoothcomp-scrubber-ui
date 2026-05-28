@@ -126,10 +126,12 @@ class ClipsRequest(BaseModel):
 async def _stream_process(job_id: str, cmd: list[str]):
     jobs[job_id]["status"] = "running"
     jobs[job_id]["log"] = []
+    env = {**os.environ, "PYTHONUNBUFFERED": "1"}
     proc = await asyncio.create_subprocess_exec(
         *cmd,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.STDOUT,
+        env=env,
     )
     async for raw in proc.stdout:
         line = raw.decode(errors="replace").rstrip()
