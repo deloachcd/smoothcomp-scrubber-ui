@@ -25,6 +25,9 @@ VIDEO_EXTENSIONS = {".mp4", ".mkv", ".mov", ".avi", ".webm"}
 # In-memory job store: job_id -> {"status": str, "log": [str]}
 jobs: dict[str, dict] = {}
 
+# At most one scan or clips job runs at a time
+active_job_id: str | None = None
+
 
 def load_lists() -> dict:
     if LISTS_FILE.exists():
@@ -124,6 +127,7 @@ class ClipsRequest(BaseModel):
 
 
 async def _stream_process(job_id: str, cmd: list[str]):
+    global active_job_id
     jobs[job_id]["status"] = "running"
     jobs[job_id]["log"] = []
     env = {**os.environ, "PYTHONUNBUFFERED": "1"}
@@ -139,10 +143,22 @@ async def _stream_process(job_id: str, cmd: list[str]):
     await proc.wait()
     jobs[job_id]["status"] = "done" if proc.returncode == 0 else "error"
     jobs[job_id]["returncode"] = proc.returncode
+    active_job_id = None
+
+
+@app.get("/api/active-job")
+async def get_active_job():
+    if active_job_id and active_job_id in jobs:
+        return {"job_id": active_job_id, **jobs[active_job_id]}
+    return {"job_id": None}
 
 
 @app.post("/api/scan")
 async def start_scan(body: ScanRequest):
+    global active_job_id
+    if active_job_id and jobs.get(active_job_id, {}).get("status") == "running":
+        raise HTTPException(status_code=409, detail="A job is already running")
+
     lists = load_lists()
     if body.list_name not in lists:
         raise HTTPException(status_code=404, detail="Competitor list not found")
@@ -151,7 +167,6 @@ async def start_scan(body: ScanRequest):
     if not competitors:
         raise HTTPException(status_code=400, detail="Competitor list is empty")
 
-    # Write competitors to a temp file inside outputs
     OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
     comp_file = OUTPUTS_DIR / f".competitors_{uuid.uuid4().hex}.txt"
     comp_file.write_text("\n".join(competitors))
@@ -168,6 +183,7 @@ async def start_scan(body: ScanRequest):
     ]
 
     job_id = uuid.uuid4().hex
+    active_job_id = job_id
     jobs[job_id] = {"status": "pending", "log": [], "type": "scan", "comp_file": str(comp_file)}
     asyncio.create_task(_stream_process(job_id, cmd))
     return {"job_id": job_id}
@@ -175,6 +191,10 @@ async def start_scan(body: ScanRequest):
 
 @app.post("/api/clips")
 async def start_clips(body: ClipsRequest):
+    global active_job_id
+    if active_job_id and jobs.get(active_job_id, {}).get("status") == "running":
+        raise HTTPException(status_code=409, detail="A job is already running")
+
     results_path = OUTPUTS_DIR / body.results_file
     if not results_path.exists():
         raise HTTPException(status_code=404, detail="Results file not found")
@@ -190,6 +210,7 @@ async def start_clips(body: ClipsRequest):
     ]
 
     job_id = uuid.uuid4().hex
+    active_job_id = job_id
     jobs[job_id] = {"status": "pending", "log": [], "type": "clips"}
     asyncio.create_task(_stream_process(job_id, cmd))
     return {"job_id": job_id}

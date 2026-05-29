@@ -164,20 +164,21 @@ function getSelectedVideos() {
 // ---------------------------------------------------------------------------
 // Job streaming
 // ---------------------------------------------------------------------------
-function startJobStream(jobId) {
+function startJobStream(jobId, skipLines = 0) {
   if (activeEventSource) activeEventSource.close();
   activeJobId = jobId;
-  clearLog();
   setBadge('running');
   setButtonsDisabled(true);
 
   const es = new EventSource(`/api/jobs/${jobId}/stream`);
   activeEventSource = es;
+  let received = 0;
 
   es.onmessage = (event) => {
     const data = JSON.parse(event.data);
     if (typeof data === 'string') {
-      appendLog(data, logClass(data));
+      if (received >= skipLines) appendLog(data, logClass(data));
+      received++;
     } else if (data.status) {
       setBadge(data.status);
       setButtonsDisabled(false);
@@ -214,6 +215,7 @@ qs('#start-scan-btn').addEventListener('click', async () => {
 
   if (!res.ok) { alert(`Error: ${(await res.json()).detail}`); return; }
   const { job_id } = await res.json();
+  clearLog();
   startJobStream(job_id);
 });
 
@@ -235,6 +237,7 @@ qs('#start-clips-btn').addEventListener('click', async () => {
 
   if (!res.ok) { alert(`Error: ${(await res.json()).detail}`); return; }
   const { job_id } = await res.json();
+  clearLog();
   startJobStream(job_id);
 });
 
@@ -309,6 +312,19 @@ async function loadResults() {
 // ---------------------------------------------------------------------------
 // Init
 // ---------------------------------------------------------------------------
+async function checkActiveJob() {
+  const job = await fetch('/api/active-job').then(r => r.json());
+  if (job.job_id && job.status === 'running') {
+    clearLog();
+    setBadge('running');
+    setButtonsDisabled(true);
+    // replay existing log lines then stream the rest without duplicating them
+    job.log.forEach(line => appendLog(line, logClass(line)));
+    startJobStream(job.job_id, job.log.length);
+  }
+}
+
 loadLists();
 loadVideos();
 loadResults();
+checkActiveJob();
