@@ -80,6 +80,38 @@
     </section>
 
     <!-- ------------------------------------------------------------------ -->
+    <!-- Results viewer                                                     -->
+    <!-- ------------------------------------------------------------------ -->
+    <section id="section-results-viewer">
+      <h2>Results <span id="results-viewer-count" class="hint"></span></h2>
+      <div class="card">
+        <div class="row" style="align-items: flex-end; gap: 1rem;">
+          <div style="flex:1">
+            <label for="view-results-select">Results file</label>
+            <select id="view-results-select">
+              <option value="">-- select results --</option>
+            </select>
+          </div>
+          <button id="view-results-btn" class="btn-secondary">View</button>
+        </div>
+        <div id="results-table-wrap" style="display:none; overflow-x:auto; margin-top:0.5rem;">
+          <table id="results-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Video file</th>
+              </tr>
+            </thead>
+            <tbody id="results-tbody"></tbody>
+          </table>
+        </div>
+        <p id="results-viewer-empty" class="empty-msg" style="display:none;">No match windows found in this file.</p>
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------------------------ -->
     <!-- STEP 3: Clips                                                       -->
     <!-- ------------------------------------------------------------------ -->
     <section id="section-clips">

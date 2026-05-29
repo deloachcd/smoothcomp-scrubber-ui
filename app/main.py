@@ -238,3 +238,23 @@ async def list_results():
     if not OUTPUTS_DIR.exists():
         return []
     return [f.name for f in sorted(OUTPUTS_DIR.glob("*.csv"))]
+
+
+@app.get("/api/results/{filename}")
+async def get_results(filename: str):
+    path = OUTPUTS_DIR / filename
+    if not path.exists() or path.suffix != ".csv":
+        raise HTTPException(status_code=404, detail="Results file not found")
+    rows = []
+    with open(path, "r") as f:
+        for line in f:
+            parts = [p.strip() for p in line.strip().split(",", 3)]
+            if len(parts) < 3:
+                continue
+            rows.append({
+                "name": parts[0],
+                "start": parts[1],
+                "end": parts[2],
+                "video_file": parts[3] if len(parts) >= 4 else "",
+            })
+    return rows

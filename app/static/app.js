@@ -158,21 +158,8 @@ function getSelectedVideos() {
 }
 
 // ---------------------------------------------------------------------------
-// Results file list (for clips)
+// Results file list (for clips + viewer) — defined later after viewer funcs
 // ---------------------------------------------------------------------------
-async function loadResults() {
-  const files = await fetch('/api/results').then(r => r.json());
-  const sel = qs('#clips-results-select');
-  const prev = sel.value;
-  sel.innerHTML = '<option value="">-- select results --</option>';
-  files.forEach(f => {
-    const opt = document.createElement('option');
-    opt.value = f;
-    opt.textContent = f;
-    if (f === prev) opt.selected = true;
-    sel.appendChild(opt);
-  });
-}
 
 // ---------------------------------------------------------------------------
 // Job streaming
@@ -250,6 +237,74 @@ qs('#start-clips-btn').addEventListener('click', async () => {
   const { job_id } = await res.json();
   startJobStream(job_id);
 });
+
+// ---------------------------------------------------------------------------
+// Results viewer
+// ---------------------------------------------------------------------------
+async function populateViewResultsSelect(files) {
+  const sel = qs('#view-results-select');
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">-- select results --</option>';
+  files.forEach(f => {
+    const opt = document.createElement('option');
+    opt.value = f;
+    opt.textContent = f;
+    if (f === prev) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+async function viewResults(filename) {
+  const rows = await fetch(`/api/results/${encodeURIComponent(filename)}`).then(r => r.json());
+  const tbody = qs('#results-tbody');
+  const wrap = qs('#results-table-wrap');
+  const empty = qs('#results-viewer-empty');
+  const count = qs('#results-viewer-count');
+
+  tbody.innerHTML = '';
+
+  if (!rows.length) {
+    wrap.style.display = 'none';
+    empty.style.display = 'block';
+    count.textContent = '';
+    return;
+  }
+
+  rows.forEach(row => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="name-cell">${row.name}</td>
+      <td class="time-cell">${row.start}</td>
+      <td class="time-cell">${row.end}</td>
+      <td class="file-cell">${row.video_file}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  wrap.style.display = 'block';
+  empty.style.display = 'none';
+  count.textContent = `(${rows.length} match${rows.length !== 1 ? 'es' : ''})`;
+}
+
+qs('#view-results-btn').addEventListener('click', () => {
+  const filename = qs('#view-results-select').value;
+  if (!filename) { alert('Select a results file.'); return; }
+  viewResults(filename);
+});
+
+async function loadResults() {
+  const files = await fetch('/api/results').then(r => r.json());
+  const sel = qs('#clips-results-select');
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">-- select results --</option>';
+  files.forEach(f => {
+    const opt = document.createElement('option');
+    opt.value = f;
+    opt.textContent = f;
+    if (f === prev) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  populateViewResultsSelect(files);
+}
 
 // ---------------------------------------------------------------------------
 // Init
